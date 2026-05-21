@@ -133,6 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Text('Already have an account? ', style: TextStyle(color: AppColors.textSecondary)),
                     GestureDetector(
                       onTap: () => context.go('/auth/login'),
+                      behavior: HitTestBehavior.opaque,
                       child: ShaderMask(
                         shaderCallback: (b) => AppColors.gradientPrimary.createShader(b),
                         child: const Text('Sign In', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),

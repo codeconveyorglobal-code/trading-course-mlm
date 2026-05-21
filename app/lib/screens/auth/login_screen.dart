@@ -112,6 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text("Don't have an account? ", style: TextStyle(color: AppColors.textSecondary)),
                     GestureDetector(
                       onTap: () => context.go('/auth/register'),
+                      behavior: HitTestBehavior.opaque,
                       child: ShaderMask(
                         shaderCallback: (b) => AppColors.gradientPrimary.createShader(b),
                         child: const Text('Sign Up', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
