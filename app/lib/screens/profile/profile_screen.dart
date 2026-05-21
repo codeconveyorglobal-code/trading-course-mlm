@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
@@ -129,7 +130,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Actions
             _ActionTile(icon: Icons.wallet_rounded, label: 'Request Withdrawal', onTap: () => context.go('/profile/withdraw')),
             _ActionTile(icon: Icons.lock_outline, label: 'Change Password', onTap: () => _showChangePassword(context)),
-            _ActionTile(icon: Icons.share_rounded, label: 'Share Referral Link', onTap: () {}),
+            _ActionTile(icon: Icons.share_rounded, label: 'Share Referral Link', onTap: () {
+              final code = context.read<AuthProvider>().user?.referralCode ?? '';
+              final link = 'https://app-orcin-beta-93.vercel.app/auth/register?ref=$code';
+              Clipboard.setData(ClipboardData(text: link));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Referral link copied!\n$link'), duration: const Duration(seconds: 3)),
+              );
+            }),
             _ActionTile(icon: Icons.logout_rounded, label: 'Sign Out', color: AppColors.danger, onTap: () async { await auth.logout(); }),
           ],
         ),
