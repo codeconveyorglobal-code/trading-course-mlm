@@ -13,8 +13,8 @@ try {
   // Use the Prisma Node.js binary directly (not the shell script wrapper)
   const prismaCli = path.join(__dirname, 'node_modules', 'prisma', 'build', 'index.js');
   if (fs.existsSync(prismaCli)) {
-    console.log('🔧 Running prisma migrate deploy...');
-    execFileSync(process.execPath, [prismaCli, 'migrate', 'deploy'], {
+    console.log('🔧 Running prisma db push...');
+    execFileSync(process.execPath, [prismaCli, 'db', 'push', '--accept-data-loss'], {
       stdio: 'inherit',
       env: { ...process.env },
     });
