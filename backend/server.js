@@ -9,17 +9,18 @@ if (!process.env.DATABASE_URL) {
 try {
   const { execFileSync } = require('child_process');
   const fs = require('fs');
-  // Ensure the prisma CLI is available
-  const prismaBin = require('path').join(__dirname, 'node_modules', '.bin', 'prisma');
-  if (fs.existsSync(prismaBin)) {
+  const path = require('path');
+  // Use the Prisma Node.js binary directly (not the shell script wrapper)
+  const prismaCli = path.join(__dirname, 'node_modules', 'prisma', 'build', 'index.js');
+  if (fs.existsSync(prismaCli)) {
     console.log('🔧 Running prisma migrate deploy...');
-    execFileSync('node', [prismaBin, 'migrate', 'deploy'], {
+    execFileSync(process.execPath, [prismaCli, 'migrate', 'deploy'], {
       stdio: 'inherit',
       env: { ...process.env },
     });
     console.log('✅ Prisma DB ready');
   } else {
-    console.warn('⚠️  Prisma CLI not found at', prismaBin, '— skipping migration');
+    console.warn('⚠️  Prisma CLI not found — skipping migration');
   }
 } catch (e) {
   console.warn('⚠️  prisma db push warning:', e.message);
