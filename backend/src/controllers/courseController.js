@@ -120,8 +120,26 @@ const createCourse = async (req, res) => {
     if (req.files) {
       if (req.files.thumbnail) courseData.thumbnail = `/uploads/images/${req.files.thumbnail[0].filename}`;
     }
-    courseData.instructor = req.user._id;
+    // Map instructor → instructorId (Prisma field)
+    courseData.instructorId = req.user._id;
     courseData.instructorName = req.user.name;
+    delete courseData.instructor;
+
+    // Generate unique slug from title
+    const baseSlug = (courseData.title || 'course')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    courseData.slug = `${baseSlug}-${Date.now()}`;
+
+    // Coerce numeric/boolean fields from form strings
+    if (courseData.price !== undefined) courseData.price = parseFloat(courseData.price) || 0;
+    if (courseData.discountPrice !== undefined) courseData.discountPrice = courseData.discountPrice ? parseFloat(courseData.discountPrice) : null;
+    if (courseData.isPublished !== undefined) courseData.isPublished = courseData.isPublished === 'true' || courseData.isPublished === true;
+    if (courseData.isFeatured !== undefined) courseData.isFeatured = courseData.isFeatured === 'true' || courseData.isFeatured === true;
+    if (courseData.isMLMEligible !== undefined) courseData.isMLMEligible = courseData.isMLMEligible === 'true' || courseData.isMLMEligible === true;
 
     const course = await Course.create(courseData);
     res.status(201).json({ success: true, course });
@@ -138,6 +156,13 @@ const updateCourse = async (req, res) => {
     if (req.files && req.files.thumbnail) {
       updateData.thumbnail = `/uploads/images/${req.files.thumbnail[0].filename}`;
     }
+    delete updateData.instructor;
+    if (updateData.price !== undefined) updateData.price = parseFloat(updateData.price) || 0;
+    if (updateData.discountPrice !== undefined) updateData.discountPrice = updateData.discountPrice ? parseFloat(updateData.discountPrice) : null;
+    if (updateData.isPublished !== undefined) updateData.isPublished = updateData.isPublished === 'true' || updateData.isPublished === true;
+    if (updateData.isFeatured !== undefined) updateData.isFeatured = updateData.isFeatured === 'true' || updateData.isFeatured === true;
+    if (updateData.isMLMEligible !== undefined) updateData.isMLMEligible = updateData.isMLMEligible === 'true' || updateData.isMLMEligible === true;
+
     const course = await Course.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
     res.json({ success: true, course });

@@ -4,7 +4,7 @@ const {
   getDashboardStats, getUsers, getUserDetail, updateUser,
   placeUserInTree, getAdminTree, updateMLMSettings,
   getAllCommissions, updateCommission, getWithdrawals, processWithdrawal,
-  manualEnroll, createAdmin, getAllTransactions,
+  manualEnroll, createAdmin, createUser, getAllTransactions,
 } = require('../controllers/adminController');
 const { protect, adminOnly } = require('../middleware/auth');
 
@@ -18,6 +18,7 @@ router.get('/users', getUsers);
 router.get('/users/:id', getUserDetail);
 router.put('/users/:id', updateUser);
 router.post('/create-admin', createAdmin);
+router.post('/create-user', createUser);
 router.post('/enroll', manualEnroll);
 
 // MLM

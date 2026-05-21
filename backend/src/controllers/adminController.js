@@ -303,6 +303,42 @@ const createAdmin = async (req, res) => {
   }
 };
 
+// @desc   Create a regular user (admin action) with optional tree placement
+// @route  POST /api/admin/create-user
+const createUser = async (req, res) => {
+  try {
+    const { name, email, password, phone, referralCode, parentUserId, position } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email and password are required' });
+    }
+
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ success: false, message: 'Email already exists' });
+
+    let sponsorId = null;
+    if (referralCode) {
+      const sponsor = await User.findOne({ referralCode });
+      if (!sponsor) return res.status(400).json({ success: false, message: 'Invalid referral code' });
+      sponsorId = sponsor._id;
+    }
+
+    const { createMLMNode, placeUserManually } = require('../utils/mlmUtils');
+    const user = await User.create({ name, email, password, phone: phone || null, referredBy: referralCode || null, sponsorId });
+
+    // Place in MLM tree
+    if (parentUserId && position) {
+      await placeUserManually(user._id, parentUserId, position);
+    } else {
+      await createMLMNode(user._id, sponsorId);
+    }
+
+    res.status(201).json({ success: true, user: user.toSafeObject() });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc   Get all transactions
 // @route  GET /api/admin/transactions
 const getAllTransactions = async (req, res) => {
@@ -333,5 +369,5 @@ module.exports = {
   getDashboardStats, getUsers, getUserDetail, updateUser,
   placeUserInTree, getAdminTree, updateMLMSettings,
   getAllCommissions, updateCommission, getWithdrawals, processWithdrawal,
-  manualEnroll, createAdmin, getAllTransactions,
+  manualEnroll, createAdmin, createUser, getAllTransactions,
 };
