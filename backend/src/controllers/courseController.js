@@ -134,6 +134,20 @@ const createCourse = async (req, res) => {
       .trim();
     courseData.slug = `${baseSlug}-${Date.now()}`;
 
+    // Normalize bracket-notation array fields sent by multipart forms
+    const normalizeArrayField = (key) => {
+      if (courseData[`${key}[]`] !== undefined) {
+        const raw = courseData[`${key}[]`];
+        courseData[key] = JSON.stringify(Array.isArray(raw) ? raw : [raw]);
+        delete courseData[`${key}[]`];
+      } else if (Array.isArray(courseData[key])) {
+        courseData[key] = JSON.stringify(courseData[key]);
+      }
+    };
+    normalizeArrayField('whatYouLearn');
+    normalizeArrayField('requirements');
+    normalizeArrayField('tags');
+
     // Coerce numeric/boolean fields from form strings
     if (courseData.price !== undefined) courseData.price = parseFloat(courseData.price) || 0;
     if (courseData.discountPrice !== undefined) courseData.discountPrice = courseData.discountPrice ? parseFloat(courseData.discountPrice) : null;
@@ -156,6 +170,20 @@ const updateCourse = async (req, res) => {
     if (req.files && req.files.thumbnail) {
       updateData.thumbnail = `/uploads/images/${req.files.thumbnail[0].filename}`;
     }
+    // Normalize bracket-notation array fields sent by multipart forms
+    const normalizeArrayField = (key) => {
+      if (updateData[`${key}[]`] !== undefined) {
+        const raw = updateData[`${key}[]`];
+        updateData[key] = JSON.stringify(Array.isArray(raw) ? raw : [raw]);
+        delete updateData[`${key}[]`];
+      } else if (Array.isArray(updateData[key])) {
+        updateData[key] = JSON.stringify(updateData[key]);
+      }
+    };
+    normalizeArrayField('whatYouLearn');
+    normalizeArrayField('requirements');
+    normalizeArrayField('tags');
+
     delete updateData.instructor;
     if (updateData.price !== undefined) updateData.price = parseFloat(updateData.price) || 0;
     if (updateData.discountPrice !== undefined) updateData.discountPrice = updateData.discountPrice ? parseFloat(updateData.discountPrice) : null;
@@ -183,6 +211,8 @@ const uploadMaterial = async (req, res) => {
     if (req.file) {
       const prefix = req.file.mimetype === 'application/pdf' ? 'pdfs' : 'docs';
       url = `/uploads/${prefix}/${req.file.filename}`;
+    } else if (req.body.externalUrl) {
+      url = req.body.externalUrl;
     }
 
     const material = {

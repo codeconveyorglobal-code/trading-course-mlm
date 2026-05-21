@@ -67,6 +67,7 @@ model Course {
   requirements          String   @default("[]")
   whatYouLearn          String   @default("[]")
   completionCertificate Boolean  @default(false)
+  pdfResourceUrl        String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
