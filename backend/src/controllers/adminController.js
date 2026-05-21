@@ -8,6 +8,22 @@ const Withdrawal = require('../models/Withdrawal');
 const Enrollment = require('../models/Enrollment');
 const { placeUserManually, getTreeData } = require('../utils/mlmUtils');
 
+// Convert Prisma Document instances to plain serializable objects
+const toPlain = (val) => {
+  if (!val) return val;
+  if (Array.isArray(val)) return val.map(toPlain);
+  if (typeof val.toJSON === 'function') return val.toJSON();
+  if (typeof val.toObject === 'function') return val.toObject();
+  if (val && typeof val === 'object') {
+    const out = {};
+    for (const k of Object.keys(val)) {
+      if (!k.startsWith('__')) out[k] = toPlain(val[k]);
+    }
+    return out;
+  }
+  return val;
+};
+
 // @desc   Dashboard stats
 // @route  GET /api/admin/dashboard
 const getDashboardStats = async (req, res) => {
@@ -45,8 +61,8 @@ const getDashboardStats = async (req, res) => {
         commissions: { total: totalCommissions[0]?.total || 0 },
         pendingWithdrawals,
       },
-      recentTransactions,
-      recentUsers,
+      recentTransactions: toPlain(recentTransactions),
+      recentUsers: toPlain(recentUsers),
       monthlyRevenue: monthlyRevenue.reverse(),
     });
   } catch (error) {
@@ -82,7 +98,7 @@ const getUsers = async (req, res) => {
       User.countDocuments(query),
     ]);
 
-    res.json({ success: true, users, pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
+    res.json({ success: true, users: toPlain(users), pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -105,7 +121,7 @@ const getUserDetail = async (req, res) => {
       Transaction.find({ userId: user._id }).limit(10).sort('-createdAt'),
     ]);
 
-    res.json({ success: true, user, node, commissions, transactions });
+    res.json({ success: true, user: toPlain(user), node: toPlain(node), commissions: toPlain(commissions), transactions: toPlain(transactions) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -124,7 +140,7 @@ const updateUser = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    res.json({ success: true, user });
+    res.json({ success: true, user: toPlain(user) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -143,7 +159,7 @@ const placeUserInTree = async (req, res) => {
     }
 
     const node = await placeUserManually(userId, parentUserId, position);
-    res.json({ success: true, message: 'User placed successfully', node });
+    res.json({ success: true, message: 'User placed successfully', node: toPlain(node) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -204,7 +220,7 @@ const getAllCommissions = async (req, res) => {
       Commission.countDocuments(query),
     ]);
 
-    res.json({ success: true, commissions, pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
+    res.json({ success: true, commissions: toPlain(commissions), pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -216,7 +232,7 @@ const updateCommission = async (req, res) => {
   try {
     const { status } = req.body;
     const commission = await Commission.findByIdAndUpdate(req.params.id, { status, paidAt: status === 'paid' ? new Date() : undefined }, { new: true });
-    res.json({ success: true, commission });
+    res.json({ success: true, commission: toPlain(commission) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -239,7 +255,7 @@ const getWithdrawals = async (req, res) => {
       Withdrawal.countDocuments(query),
     ]);
 
-    res.json({ success: true, withdrawals, pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
+    res.json({ success: true, withdrawals: toPlain(withdrawals), pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -264,7 +280,7 @@ const processWithdrawal = async (req, res) => {
       });
     }
 
-    res.json({ success: true, withdrawal });
+    res.json({ success: true, withdrawal: toPlain(withdrawal) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -359,7 +375,7 @@ const getAllTransactions = async (req, res) => {
       Transaction.countDocuments(query),
     ]);
 
-    res.json({ success: true, transactions, pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
+    res.json({ success: true, transactions: toPlain(transactions), pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

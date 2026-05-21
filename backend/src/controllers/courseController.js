@@ -2,6 +2,19 @@ const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const User = require('../models/User');
 
+const toPlain = (val) => {
+  if (!val) return val;
+  if (Array.isArray(val)) return val.map(toPlain);
+  if (typeof val.toJSON === 'function') return val.toJSON();
+  if (typeof val.toObject === 'function') return val.toObject();
+  if (val && typeof val === 'object') {
+    const out = {};
+    for (const k of Object.keys(val)) { if (!k.startsWith('__')) out[k] = toPlain(val[k]); }
+    return out;
+  }
+  return val;
+};
+
 // @desc   Get all courses (public)
 // @route  GET /api/courses
 const getCourses = async (req, res) => {
@@ -193,7 +206,7 @@ const updateCourse = async (req, res) => {
 
     const course = await Course.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
-    res.json({ success: true, course });
+    res.json({ success: true, course: toPlain(course) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -252,7 +265,7 @@ const getAllCoursesAdmin = async (req, res) => {
     const courses = await Course.find({})
       .populate('instructor', 'name')
       .sort('-createdAt');
-    res.json({ success: true, courses });
+    res.json({ success: true, courses: toPlain(courses) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
