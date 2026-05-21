@@ -84,6 +84,9 @@ const allowedOrigins = [
   ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
   process.env.ADMIN_URL,
   process.env.APP_URL,
+  // Vercel production URLs
+  'https://admin-steel-ten.vercel.app',
+  'https://app-orcin-beta-93.vercel.app',
   'http://localhost:3000',
   'http://localhost:3001',
 ].filter(Boolean);

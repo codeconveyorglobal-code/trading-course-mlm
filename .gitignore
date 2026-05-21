@@ -37,7 +37,12 @@ app/linux/
 app/macos/
 app/windows/
 app/.packages
-app/build/
+# Keep app/build/web committed so Vercel can serve it (no Flutter SDK on Vercel)
+app/build/android/
+app/build/ios/
+app/build/linux/
+app/build/macos/
+app/build/windows/
 # Keep pubspec.lock for reproducible builds
 
 # ===== Logs =====
