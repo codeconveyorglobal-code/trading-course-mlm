@@ -103,7 +103,7 @@ app.use('/api/users', userRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ success: true, message: 'Trading MLM API is running', timestamp: new Date() });
+  res.json({ success: true, message: 'Trading MLM API is running', timestamp: new Date(), db: 'sqlite', version: '2.0' });
 });
 
 // One-time admin seed endpoint (protected by setup secret)

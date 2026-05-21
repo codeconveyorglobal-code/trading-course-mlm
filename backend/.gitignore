@@ -1,6 +1,26 @@
+﻿node_modules/
+.env
 
 # SQLite dev database
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
+
+# Build
+dist/
+build/
+.nyc_output
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
