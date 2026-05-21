@@ -56,14 +56,33 @@ export default function Layout() {
       <Sider
         collapsed={collapsed}
         width={240}
-        style={{ background: '#0d1526', borderRight: '1px solid #1e2d40', position: 'fixed', height: '100vh', overflow: 'auto', zIndex: 100 }}
+        style={{
+          background: '#080d1c',
+          borderRight: '1px solid #1a2535',
+          position: 'fixed', height: '100vh', overflow: 'auto', zIndex: 100,
+        }}
       >
         {/* Logo */}
-        <div style={{ padding: collapsed ? '20px 8px' : '20px 24px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #1e2d40' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #00d2ff, #7b2ff7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{
+          padding: collapsed ? '18px 10px' : '18px 20px',
+          display: 'flex', alignItems: 'center', gap: 10,
+          borderBottom: '1px solid #1a2535',
+          background: 'linear-gradient(135deg, rgba(0,210,255,0.04), rgba(123,47,247,0.04))',
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            background: 'linear-gradient(135deg, #00d2ff, #7b2ff7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 20px rgba(0,210,255,0.3)',
+          }}>
             <ThunderboltOutlined style={{ color: '#fff', fontSize: 18 }} />
           </div>
-          {!collapsed && <Text strong style={{ color: '#fff', fontSize: 18 }}>TradeMLM</Text>}
+          {!collapsed && (
+            <div>
+              <Text strong style={{ color: '#fff', fontSize: 17, display: 'block', lineHeight: 1.1 }}>TradeMLM</Text>
+              <Text style={{ color: '#4a7c8e', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase' }}>Admin Panel</Text>
+            </div>
+          )}
         </div>
 
         <Menu
@@ -79,10 +98,11 @@ export default function Layout() {
 
       <AntLayout style={{ marginLeft: collapsed ? 80 : 240, transition: 'margin 0.2s' }}>
         <Header style={{
-          background: 'rgba(13,21,38,0.95)', backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid #1e2d40', padding: '0 24px',
+          background: 'rgba(8,13,28,0.95)', backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid #1a2535', padding: '0 24px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           position: 'sticky', top: 0, zIndex: 99,
+          boxShadow: '0 2px 20px rgba(0,0,0,0.2)',
         }}>
           <Button
             type="text"

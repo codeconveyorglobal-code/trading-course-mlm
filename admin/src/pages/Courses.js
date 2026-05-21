@@ -6,6 +6,7 @@ import api from '../services/api';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
+const BASE_URL = 'https://hopeful-energy-production.up.railway.app';
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -50,7 +51,10 @@ export default function Courses() {
     {
       title: 'Course', render: (_, r) => (
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {r.thumbnail ? <img src={`${import.meta.env.VITE_API_URL?.replace('/api','') || 'https://hopeful-energy-production.up.railway.app'}${r.thumbnail}`} alt="" style={{ width: 56, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 56, height: 40, borderRadius: 8, background: '#1e2d40' }} />}
+          {r.thumbnail
+            ? <img src={`${BASE_URL}${r.thumbnail}`} alt="" style={{ width: 56, height: 40, borderRadius: 8, objectFit: 'cover' }} />
+            : <div style={{ width: 56, height: 40, borderRadius: 8, background: 'linear-gradient(135deg,#1e2d40,#0d1526)', display:'flex', alignItems:'center', justifyContent:'center', color:'#4a5568', fontSize:18 }}>📖</div>
+          }
           <div>
             <Text strong style={{ color: '#fff', display: 'block' }}>{r.title}</Text>
             <Text style={{ color: '#4a5568', fontSize: 12 }}>{r.totalLessons || 0} lessons · {r.duration || 'N/A'}</Text>
