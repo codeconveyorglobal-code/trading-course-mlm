@@ -35,7 +35,7 @@ class AppRouter {
         GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
         GoRoute(
           path: '/auth',
-          redirect: (_, state) => state.matchedLocation == '/auth' ? '/auth/login' : null,
+          redirect: (_, state) => state.uri.path == '/auth' ? '/auth/login' : null,
           routes: [
             GoRoute(path: 'login', builder: (_, __) => const LoginScreen()),
             GoRoute(path: 'register', builder: (_, s) => RegisterScreen(referralCode: s.uri.queryParameters['ref']), ),
