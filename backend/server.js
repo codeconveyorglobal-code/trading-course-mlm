@@ -9,7 +9,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 
-const connectDB = require('./src/config/database');
 const authRoutes = require('./src/routes/auth');
 const courseRoutes = require('./src/routes/courses');
 const mlmRoutes = require('./src/routes/mlm');
@@ -30,9 +29,6 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
   },
 });
-
-// Connect to MongoDB
-connectDB();
 
 // Security Middleware
 app.use(helmet({
@@ -58,6 +54,7 @@ app.use('/api/auth/register', authLimiter);
 
 // General Middleware
 const allowedOrigins = [
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),
   process.env.ADMIN_URL,
   process.env.APP_URL,
   'http://localhost:3000',
@@ -109,6 +106,19 @@ app.get('/health', (req, res) => {
   res.json({ success: true, message: 'Trading MLM API is running', timestamp: new Date() });
 });
 
+// One-time admin seed endpoint (protected by setup secret)
+app.post('/setup/seed-admin', async (req, res) => {
+  const secret = req.headers['x-setup-secret'];
+  if (secret !== process.env.SETUP_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  try {
+    await seedAdminIfNeeded();
+    const User = require('./src/models/User');
+    const existing = await User.findOne({ role: 'admin' });
+    if (existing) return res.json({ success: true, message: 'Admin ready', email: existing.email });
+    res.status(500).json({ error: 'Seed failed silently' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // 404 Handler
 app.use('*', (req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
@@ -125,11 +135,23 @@ app.use((err, req, res, next) => {
   });
 });
 
+const seedAdminIfNeeded = async () => {
+  try {
+    const User = require('./src/models/User');
+    const existing = await User.findOne({ role: 'admin' });
+    if (existing) { console.log(`ℹ️  Admin already exists: ${existing.email}`); return; }
+    await User.create({ name: 'Super Admin', email: 'admin@tradingmlm.com', password: 'Admin@123456', role: 'admin', phone: '0000000000', referralCode: 'ADMIN001', isActive: true });
+    console.log('✅ Admin seeded: admin@tradingmlm.com / Admin@123456');
+  } catch (e) { console.error('⚠️  Admin seed error:', e.message); }
+};
+
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+server.listen(PORT, async () => {
+  console.log(`🚀 Server running on port ${PORT} (SQLite mode)`);
   console.log(`📊 Admin Panel: ${process.env.ADMIN_URL}`);
   console.log(`📱 App URL: ${process.env.APP_URL}`);
+  // Seed admin on startup (SQLite is always available)
+  setTimeout(() => seedAdminIfNeeded(), 2000);
 });
 
 module.exports = { app, io };

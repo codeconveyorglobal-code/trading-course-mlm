@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String    @id @default(uuid())
+  name                   String
+  email                  String    @unique
+  password               String
+  phone                  String?
+  role                   String    @default("user")
+  profilePicture         String?
+  referralCode           String    @unique
+  referredBy             String?
+  sponsorId              String?
+  isActive               Boolean   @default(true)
+  isEmailVerified        Boolean   @default(false)
+  emailVerificationToken String?
+  resetPasswordToken     String?
+  resetPasswordExpire    DateTime?
+  walletBalance          Float     @default(0)
+  totalEarnings          Float     @default(0)
+  totalWithdrawn         Float     @default(0)
+  cryptoWalletAddress    String?
+  rank                   String    @default("Bronze")
+  purchasedCourses       String    @default("[]")
+  kycStatus              String    @default("pending")
+  kycDocuments           String    @default("[]")
+  lastLogin              DateTime?
+  joinDate               DateTime  @default(now())
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model Course {
+  id                    String   @id @default(uuid())
+  title                 String
+  slug                  String   @unique
+  description           String
+  shortDescription      String?
+  category              String
+  level                 String   @default("Beginner")
+  price                 Float
+  discountPrice         Float?
+  currency              String   @default("USD")
+  thumbnail             String?
+  previewVideo          String?
+  instructorId          String?
+  instructorName        String?
+  materials             String   @default("[]")
+  quizzes               String   @default("[]")
+  tags                  String   @default("[]")
+  language              String   @default("English")
+  duration              String?
+  totalLessons          Int      @default(0)
+  isPublished           Boolean  @default(false)
+  isFeatured            Boolean  @default(false)
+  isMLMEligible         Boolean  @default(true)
+  enrolledCount         Int      @default(0)
+  rating                Float    @default(0)
+  reviewCount           Int      @default(0)
+  requirements          String   @default("[]")
+  whatYouLearn          String   @default("[]")
+  completionCertificate Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Enrollment {
+  id                 String    @id @default(uuid())
+  userId             String
+  courseId           String
+  transactionId      String?
+  progress           Float     @default(0)
+  completedMaterials String    @default("[]")
+  completedAt        DateTime?
+  certificateUrl     String?
+  lastAccessedAt     DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+model Transaction {
+  id             String    @id @default(uuid())
+  userId         String
+  courseId       String?
+  type           String
+  amount         Float
+  currency       String    @default("USD")
+  cryptoCurrency String?
+  cryptoAmount   Float?
+  cryptoAddress  String?
+  txHash         String?
+  exchangeRate   Float?
+  paymentId      String?   @unique
+  paymentStatus  String    @default("waiting")
+  status         String    @default("pending")
+  description    String?
+  metadata       String?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Commission {
+  id            String    @id @default(uuid())
+  userId        String
+  fromUserId    String
+  transactionId String?
+  courseId      String?
+  type          String
+  level         Int       @default(1)
+  percentage    Float?
+  baseAmount    Float
+  amount        Float
+  status        String    @default("pending")
+  paidAt        DateTime?
+  paidVia       String?
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Withdrawal {
+  id              String    @id @default(uuid())
+  userId          String
+  amount          Float
+  currency        String    @default("USDT")
+  cryptoAddress   String
+  network         String?
+  status          String    @default("pending")
+  txHash          String?
+  adminNote       String?
+  processedAt     DateTime?
+  processedById   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model MLMNode {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  parentId             String?
+  sponsorId            String?
+  position             String   @default("left")
+  level                Int      @default(0)
+  leftChildId          String?
+  rightChildId         String?
+  leftVolume           Float    @default(0)
+  rightVolume          Float    @default(0)
+  leftCount            Int      @default(0)
+  rightCount           Int      @default(0)
+  leftCarry            Float    @default(0)
+  rightCarry           Float    @default(0)
+  totalDirectReferrals Int      @default(0)
+  totalTeamSize        Int      @default(0)
+  totalEarnings        Float    @default(0)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model MLMSettings {
+  id                      String   @id @default(uuid())
+  singleton               Boolean  @default(true) @unique
+  directReferralCommission Float   @default(10)
+  levelCommissions        String   @default("[]")
+  binaryEnabled           Boolean  @default(true)
+  binaryMatchingBonus     Float    @default(10)
+  binaryWeakLegPercentage Float    @default(100)
+  maxBinaryPercentage     Float    @default(50)
+  rankBonuses             String   @default("[]")
+  minPayout               Float    @default(50)
+  payoutSchedule          String   @default("weekly")
+  payoutDay               Int      @default(1)
+  commissionHoldDays      Int      @default(7)
+  commissionCurrency      String   @default("USDT")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+model Quiz {
+  id           String   @id @default(uuid())
+  courseId     String?
+  title        String
+  description  String?
+  questions    String   @default("[]")
+  timeLimit    Int      @default(30)
+  passingScore Float    @default(70)
+  totalMarks   Float    @default(0)
+  attempts     Int      @default(3)
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model QuizAttempt {
+  id             String    @id @default(uuid())
+  userId         String
+  quizId         String
+  courseId       String
+  answers        String    @default("[]")
+  score          Float     @default(0)
+  totalMarks     Float     @default(0)
+  percentage     Float     @default(0)
+  passed         Boolean   @default(false)
+  timeTaken      Int?
+  completedAt    DateTime  @default(now())
+  certificateUrl String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
