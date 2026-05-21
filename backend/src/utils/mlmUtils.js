@@ -68,9 +68,9 @@ const createMLMNode = async (userId, sponsorId) => {
 
     // Update parent's child reference
     if (position === 'left') {
-      await MLMNode.findByIdAndUpdate(parentNode._id, { leftChild: newNode._id });
+      await MLMNode.findByIdAndUpdate(parentNode._id, { leftChildId: newNode._id });
     } else {
-      await MLMNode.findByIdAndUpdate(parentNode._id, { rightChild: newNode._id });
+      await MLMNode.findByIdAndUpdate(parentNode._id, { rightChildId: newNode._id });
     }
 
     // Update team counts up the tree
@@ -91,11 +91,11 @@ const findAvailablePosition = async (rootNodeId) => {
     const node = await MLMNode.findById(nodeId);
     if (!node) continue;
 
-    if (!node.leftChild) return { node, position: 'left' };
-    if (!node.rightChild) return { node, position: 'right' };
+    if (!node.leftChildId) return { node, position: 'left' };
+    if (!node.rightChildId) return { node, position: 'right' };
 
-    queue.push(node.leftChild);
-    queue.push(node.rightChild);
+    queue.push(node.leftChildId);
+    queue.push(node.rightChildId);
   }
   return null;
 };
@@ -105,10 +105,10 @@ const placeUserManually = async (userId, parentUserId, position) => {
   const parentNode = await MLMNode.findOne({ userId: parentUserId });
   if (!parentNode) throw new Error('Parent node not found');
 
-  if (position === 'left' && parentNode.leftChild) {
+  if (position === 'left' && parentNode.leftChildId) {
     throw new Error('Left position is already occupied');
   }
-  if (position === 'right' && parentNode.rightChild) {
+  if (position === 'right' && parentNode.rightChildId) {
     throw new Error('Right position is already occupied');
   }
 
@@ -132,9 +132,9 @@ const placeUserManually = async (userId, parentUserId, position) => {
   }
 
   if (position === 'left') {
-    await MLMNode.findByIdAndUpdate(parentNode._id, { leftChild: existingNode._id });
+    await MLMNode.findByIdAndUpdate(parentNode._id, { leftChildId: existingNode._id });
   } else {
-    await MLMNode.findByIdAndUpdate(parentNode._id, { rightChild: existingNode._id });
+    await MLMNode.findByIdAndUpdate(parentNode._id, { rightChildId: existingNode._id });
   }
 
   await updateAncestorCounts(parentNode._id, position);
@@ -149,8 +149,8 @@ const updateAncestorCounts = async (nodeId, addedPosition) => {
     if (!node) break;
 
     // Recalculate left/right counts from children
-    const leftCount = node.leftChild ? await getSubtreeCount(node.leftChild) : 0;
-    const rightCount = node.rightChild ? await getSubtreeCount(node.rightChild) : 0;
+    const leftCount = node.leftChildId ? await getSubtreeCount(node.leftChildId) : 0;
+    const rightCount = node.rightChildId ? await getSubtreeCount(node.rightChildId) : 0;
 
     await MLMNode.findByIdAndUpdate(currentId, {
       leftCount,
@@ -166,8 +166,8 @@ const getSubtreeCount = async (nodeId) => {
   if (!nodeId) return 0;
   const node = await MLMNode.findById(nodeId);
   if (!node) return 0;
-  const left = node.leftChild ? await getSubtreeCount(node.leftChild) : 0;
-  const right = node.rightChild ? await getSubtreeCount(node.rightChild) : 0;
+  const left = node.leftChildId ? await getSubtreeCount(node.leftChildId) : 0;
+  const right = node.rightChildId ? await getSubtreeCount(node.rightChildId) : 0;
   return 1 + left + right;
 };
 
@@ -270,9 +270,9 @@ const updateBinaryVolumes = async (userId, amount) => {
     const parentNode = await MLMNode.findById(currentId);
     if (!parentNode) break;
 
-    if (parentNode.leftChild?.toString() === childId.toString()) {
+    if (parentNode.leftChildId?.toString() === childId.toString()) {
       await MLMNode.findByIdAndUpdate(currentId, { $inc: { leftVolume: amount } });
-    } else if (parentNode.rightChild?.toString() === childId.toString()) {
+    } else if (parentNode.rightChildId?.toString() === childId.toString()) {
       await MLMNode.findByIdAndUpdate(currentId, { $inc: { rightVolume: amount } });
     }
 
@@ -305,12 +305,12 @@ const buildTree = async (node, maxDepth, currentDepth) => {
     right: null,
   };
 
-  if (node.leftChild && currentDepth < maxDepth) {
-    const leftNode = await MLMNode.findById(node.leftChild);
+  if (node.leftChildId && currentDepth < maxDepth) {
+    const leftNode = await MLMNode.findById(node.leftChildId);
     treeNode.left = await buildTree(leftNode, maxDepth, currentDepth + 1);
   }
-  if (node.rightChild && currentDepth < maxDepth) {
-    const rightNode = await MLMNode.findById(node.rightChild);
+  if (node.rightChildId && currentDepth < maxDepth) {
+    const rightNode = await MLMNode.findById(node.rightChildId);
     treeNode.right = await buildTree(rightNode, maxDepth, currentDepth + 1);
   }
 
