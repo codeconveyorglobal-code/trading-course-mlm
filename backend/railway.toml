@@ -7,6 +7,3 @@ healthcheckPath = "/health"
 healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
-
-[variables]
-DATABASE_URL = "file:/data/trading-mlm.db"

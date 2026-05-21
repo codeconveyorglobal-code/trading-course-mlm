@@ -1,6 +1,6 @@
 // Ensure DATABASE_URL is set before PrismaClient is instantiated
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'file:/data/trading-mlm.db';
+  process.env.DATABASE_URL = 'file:./trading-mlm.db';
 }
 
 const { PrismaClient } = require('@prisma/client');

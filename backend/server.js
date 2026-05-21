@@ -2,18 +2,25 @@ require('dotenv').config();
 
 // Ensure DATABASE_URL is set before anything loads Prisma
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'file:/data/trading-mlm.db';
+  process.env.DATABASE_URL = 'file:./trading-mlm.db';
 }
 
-// Run Prisma DB push synchronously at startup to ensure schema is applied
+// Run Prisma DB push to ensure schema is applied (using node directly for reliability)
 try {
-  const { execSync } = require('child_process');
-  console.log('🔧 Running prisma db push...');
-  execSync('npx prisma db push --accept-data-loss --skip-generate', {
-    stdio: 'inherit',
-    env: { ...process.env },
-  });
-  console.log('✅ Prisma DB ready');
+  const { execFileSync } = require('child_process');
+  const fs = require('fs');
+  // Ensure the prisma CLI is available
+  const prismaBin = require('path').join(__dirname, 'node_modules', '.bin', 'prisma');
+  if (fs.existsSync(prismaBin)) {
+    console.log('🔧 Running prisma migrate deploy...');
+    execFileSync('node', [prismaBin, 'migrate', 'deploy'], {
+      stdio: 'inherit',
+      env: { ...process.env },
+    });
+    console.log('✅ Prisma DB ready');
+  } else {
+    console.warn('⚠️  Prisma CLI not found at', prismaBin, '— skipping migration');
+  }
 } catch (e) {
   console.warn('⚠️  prisma db push warning:', e.message);
 }
