@@ -50,7 +50,7 @@ export default function Courses() {
     {
       title: 'Course', render: (_, r) => (
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {r.thumbnail ? <img src={`http://localhost:5000${r.thumbnail}`} alt="" style={{ width: 56, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 56, height: 40, borderRadius: 8, background: '#1e2d40' }} />}
+          {r.thumbnail ? <img src={`${import.meta.env.VITE_API_URL?.replace('/api','') || 'https://hopeful-energy-production.up.railway.app'}${r.thumbnail}`} alt="" style={{ width: 56, height: 40, borderRadius: 8, objectFit: 'cover' }} /> : <div style={{ width: 56, height: 40, borderRadius: 8, background: '#1e2d40' }} />}
           <div>
             <Text strong style={{ color: '#fff', display: 'block' }}>{r.title}</Text>
             <Text style={{ color: '#4a5568', fontSize: 12 }}>{r.totalLessons || 0} lessons · {r.duration || 'N/A'}</Text>
