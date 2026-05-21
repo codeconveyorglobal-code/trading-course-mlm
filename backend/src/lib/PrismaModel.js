@@ -105,7 +105,13 @@ function extractUpdateData(update) {
 // ─── Document instance (behaves like a Mongoose document) ────────────────────
 class Document {
   constructor(data, modelDef) {
-    this.__modelDef = modelDef;
+    // Store modelDef as non-enumerable so JSON.stringify never touches it
+    Object.defineProperty(this, '__modelDef', {
+      value: modelDef,
+      enumerable: false,
+      writable: true,
+      configurable: true,
+    });
     for (const [k, v] of Object.entries(data)) {
       this[k] = v;
     }
@@ -152,6 +158,16 @@ class Document {
     delete obj.password;
     delete obj.emailVerificationToken;
     delete obj.resetPasswordToken;
+    return obj;
+  }
+
+  // Called by JSON.stringify / res.json() — returns plain data without internals
+  toJSON() {
+    const obj = {};
+    for (const [k, v] of Object.entries(this)) {
+      if (!k.startsWith('__')) obj[k] = v;
+    }
+    if (this.id) obj._id = this.id;
     return obj;
   }
 
