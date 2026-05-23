@@ -14,8 +14,14 @@ api.interceptors.response.use(
   res => res,
   err => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('adminToken');
-      window.location.href = '/login';
+      // Don't redirect when the login/register request itself fails —
+      // let the calling code show the error message instead.
+      const url = err.config?.url || '';
+      const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register');
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('adminToken');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }

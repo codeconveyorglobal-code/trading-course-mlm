@@ -2,32 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
 export default function Login() {
   const { login, admin } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // Navigate only after the admin state is actually committed in context
+  // If already authenticated, go straight to dashboard
   useEffect(() => {
-    if (admin) navigate('/', { replace: true });
-  }, [admin, navigate]);
+    if (admin) window.location.replace('/');
+  }, [admin]);
 
   const onFinish = async ({ email, password }) => {
     setLoading(true);
     try {
       await login(email, password);
-      message.success('Welcome back!');
+      // Hard redirect — avoids React Router timing issues where PrivateRoute
+      // sees stale admin=null and bounces back to /login.
+      window.location.replace('/');
     } catch (err) {
       const msg =
         err.response?.data?.message ||
         err.message ||
         'Login failed. Please check your credentials.';
       message.error(msg);
-    } finally {
       setLoading(false);
     }
   };
