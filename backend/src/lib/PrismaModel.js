@@ -391,6 +391,21 @@ function createModel(modelName, jsonFields = [], populateMap = {}, preSave = nul
       return { deletedCount: 1 };
     },
 
+    // ── insertMany ───────────────────────────────────────────────────────────
+    async insertMany(docs) {
+      const results = [];
+      for (const doc of docs) {
+        const d = { ...doc };
+        if (!d.id) d.id = uuidv4();
+        if (preSave) await preSave(d);
+        delete d._id;
+        const serialized = serialize(d, jsonFields);
+        const result = await prismaModel.create({ data: serialized });
+        results.push(new Document(deserialize(result, jsonFields), modelDef));
+      }
+      return results;
+    },
+
     // ── aggregate (simplified) ───────────────────────────────────────────────
     async aggregate(pipeline) {
       const matchStage = pipeline.find(s => s.$match);

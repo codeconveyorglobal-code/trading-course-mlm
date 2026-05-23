@@ -133,24 +133,46 @@ class _MLMDashboardScreenState extends State<MLMDashboardScreen> {
                     ]),
                     const SizedBox(height: 20),
 
-                    // Withdraw Button
-                    GestureDetector(
-                      onTap: () => context.go('/profile/withdraw'),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [AppColors.success, Color(0xFF00A878)]),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [BoxShadow(color: AppColors.success.withOpacity(0.3), blurRadius: 12)],
+                    // Action Buttons Row
+                    Row(children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => context.go('/profile/withdraw'),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [AppColors.success, Color(0xFF00A878)]),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [BoxShadow(color: AppColors.success.withOpacity(0.3), blurRadius: 12)],
+                            ),
+                            child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                              SizedBox(width: 8),
+                              Text('Withdraw', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+                            ]),
+                          ),
                         ),
-                        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [
-                          Icon(Icons.account_balance_wallet_rounded, color: Colors.white),
-                          SizedBox(width: 10),
-                          Text('Request Withdrawal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
-                        ]),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => context.go('/profile/wallet'),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.card,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.primary.withOpacity(0.4)),
+                            ),
+                            child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              Icon(Icons.account_balance_wallet_rounded, color: AppColors.primary, size: 18),
+                              SizedBox(width: 8),
+                              Text('My Wallet', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 15)),
+                            ]),
+                          ),
+                        ),
+                      ),
+                    ]),
                     const SizedBox(height: 28),
 
                     // Recent Commissions

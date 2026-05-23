@@ -99,4 +99,12 @@ class ApiService {
 
   Future<Response> getSupportedCurrencies() =>
       _dio.get('/payments/currencies');
+
+  Future<Response> getWallet() => _dio.get('/payments/wallet');
+
+  Future<Response> saveWalletAddress(String address) =>
+      _dio.put('/payments/wallet/address', data: {'cryptoWalletAddress': address});
+
+  Future<Response> getEstimate(double amount, String currency) =>
+      _dio.get('/payments/estimate', queryParameters: {'amount': amount, 'currency': currency});
 }

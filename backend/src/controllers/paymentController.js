@@ -183,4 +183,73 @@ const getSupportedCurrencies = async (req, res) => {
   }
 };
 
-module.exports = { initiatePayment, paymentCallback, checkPaymentStatus, getTransactionHistory, getSupportedCurrencies };
+// @desc   Get user wallet info (balance, address, commissions, withdrawals)
+// @route  GET /api/payments/wallet
+const getWallet = async (req, res) => {
+  try {
+    const [user, recentCommissions, recentWithdrawals, recentTransactions] = await Promise.all([
+      User.findById(req.user._id).select('walletBalance totalEarnings totalWithdrawn cryptoWalletAddress rank'),
+      require('../models/Commission').find({ userId: req.user._id })
+        .populate('fromUserId', 'name')
+        .populate('courseId', 'title')
+        .sort('-createdAt')
+        .limit(10),
+      require('../models/Withdrawal').find({ userId: req.user._id })
+        .sort('-createdAt')
+        .limit(10),
+      Transaction.find({ userId: req.user._id, type: 'course_purchase' })
+        .populate('courseId', 'title thumbnail')
+        .sort('-createdAt')
+        .limit(5),
+    ]);
+
+    res.json({
+      success: true,
+      wallet: {
+        balance: user.walletBalance || 0,
+        totalEarnings: user.totalEarnings || 0,
+        totalWithdrawn: user.totalWithdrawn || 0,
+        cryptoWalletAddress: user.cryptoWalletAddress || null,
+        rank: user.rank,
+      },
+      recentCommissions,
+      recentWithdrawals,
+      recentTransactions,
+    });
+  } catch (error) {
+    console.error('getWallet error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc   Save / update user's default crypto withdrawal address
+// @route  PUT /api/payments/wallet/address
+const saveWalletAddress = async (req, res) => {
+  try {
+    const { cryptoWalletAddress } = req.body;
+    if (!cryptoWalletAddress || cryptoWalletAddress.trim().length < 10) {
+      return res.status(400).json({ success: false, message: 'Invalid wallet address' });
+    }
+    await User.findByIdAndUpdate(req.user._id, { cryptoWalletAddress: cryptoWalletAddress.trim() });
+    res.json({ success: true, message: 'Wallet address saved', cryptoWalletAddress: cryptoWalletAddress.trim() });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc   Get estimated crypto amount for a USD price
+// @route  GET /api/payments/estimate?amount=XX&currency=USDT
+const getEstimate = async (req, res) => {
+  try {
+    const { amount, currency = 'USDT' } = req.query;
+    if (!amount) return res.status(400).json({ success: false, message: 'Amount required' });
+    const { getEstimatedPrice } = require('../utils/cryptoPayment');
+    const data = await getEstimatedPrice(parseFloat(amount), 'USD', currency.toLowerCase());
+    res.json({ success: true, estimatedAmount: data.estimated_amount, currency, usdAmount: parseFloat(amount) });
+  } catch (error) {
+    // Fallback: 1:1 for stablecoins
+    res.json({ success: true, estimatedAmount: parseFloat(req.query.amount || 0), currency: req.query.currency || 'USDT', usdAmount: parseFloat(req.query.amount || 0) });
+  }
+};
+
+module.exports = { initiatePayment, paymentCallback, checkPaymentStatus, getTransactionHistory, getSupportedCurrencies, getWallet, saveWalletAddress, getEstimate };

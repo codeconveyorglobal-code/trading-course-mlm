@@ -14,6 +14,7 @@ import '../screens/payment/payment_screen.dart';
 import '../screens/payment/payment_result_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/withdraw_screen.dart';
+import '../screens/profile/wallet_screen.dart';
 import '../screens/main_shell.dart';
 
 class AppRouter {
@@ -52,6 +53,7 @@ class AppRouter {
             GoRoute(path: '/mlm/tree', builder: (_, __) => const BinaryTreeScreen()),
             GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
             GoRoute(path: '/profile/withdraw', builder: (_, __) => const WithdrawScreen()),
+            GoRoute(path: '/profile/wallet', builder: (_, __) => const WalletScreen()),
           ],
         ),
         GoRoute(path: '/payment/:courseId', builder: (_, s) => PaymentScreen(courseId: s.pathParameters['courseId']!)),

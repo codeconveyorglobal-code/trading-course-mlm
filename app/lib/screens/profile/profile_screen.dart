@@ -129,6 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Actions
             _ActionTile(icon: Icons.wallet_rounded, label: 'Request Withdrawal', onTap: () => context.go('/profile/withdraw')),
+            _ActionTile(icon: Icons.account_balance_wallet_rounded, label: 'My Wallet & Commissions', onTap: () => context.go('/profile/wallet')),
             _ActionTile(icon: Icons.lock_outline, label: 'Change Password', onTap: () => _showChangePassword(context)),
             _ActionTile(icon: Icons.share_rounded, label: 'Share Referral Link', onTap: () {
               final code = context.read<AuthProvider>().user?.referralCode ?? '';
