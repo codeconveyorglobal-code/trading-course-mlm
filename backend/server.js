@@ -45,6 +45,10 @@ const quizRoutes = require('./src/routes/quizzes');
 const userRoutes = require('./src/routes/users');
 
 const app = express();
+
+// Trust Railway/Vercel proxy — required for rate-limiting and correct IP detection
+app.set('trust proxy', 1);
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -106,6 +110,14 @@ app.use(compression());
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Disable ETag / caching on auth routes to prevent 304 responses
+app.use('/api/auth', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
