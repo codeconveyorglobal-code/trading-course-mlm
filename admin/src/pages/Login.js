@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,18 +7,26 @@ import { useNavigate } from 'react-router-dom';
 const { Title, Text } = Typography;
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, admin } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  // Navigate only after the admin state is actually committed in context
+  useEffect(() => {
+    if (admin) navigate('/', { replace: true });
+  }, [admin, navigate]);
 
   const onFinish = async ({ email, password }) => {
     setLoading(true);
     try {
       await login(email, password);
       message.success('Welcome back!');
-      navigate('/');
     } catch (err) {
-      message.error(err.response?.data?.message || err.message || 'Login failed');
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        'Login failed. Please check your credentials.';
+      message.error(msg);
     } finally {
       setLoading(false);
     }
