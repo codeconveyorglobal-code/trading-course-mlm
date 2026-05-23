@@ -6,6 +6,7 @@ const MLMSettings = require('../models/MLMSettings');
 const MLMNode = require('../models/MLMNode');
 const Withdrawal = require('../models/Withdrawal');
 const Enrollment = require('../models/Enrollment');
+const AppSettings = require('../models/AppSettings');
 const { placeUserManually, getTreeData } = require('../utils/mlmUtils');
 
 // Convert Prisma Document instances to plain serializable objects
@@ -381,9 +382,58 @@ const getAllTransactions = async (req, res) => {
   }
 };
 
+// @desc   Get payment gateway (NOWPayments) settings
+// @route  GET /api/admin/payment-settings
+const getAppSettings = async (req, res) => {
+  try {
+    let settings = await AppSettings.findOne({ singleton: true });
+    if (!settings) {
+      settings = await AppSettings.create({ singleton: true });
+    }
+    const plain = toPlain(settings);
+    // Mask the API key — only show last 6 chars
+    if (plain.nowpaymentsApiKey && plain.nowpaymentsApiKey.length > 6) {
+      plain.nowpaymentsApiKeyMasked = '••••••••' + plain.nowpaymentsApiKey.slice(-6);
+    } else {
+      plain.nowpaymentsApiKeyMasked = plain.nowpaymentsApiKey ? '••••••' : '';
+    }
+    if (plain.nowpaymentsIpnSecret && plain.nowpaymentsIpnSecret.length > 4) {
+      plain.nowpaymentsIpnSecretMasked = '••••••••' + plain.nowpaymentsIpnSecret.slice(-4);
+    } else {
+      plain.nowpaymentsIpnSecretMasked = plain.nowpaymentsIpnSecret ? '••••' : '';
+    }
+    res.json({ success: true, settings: plain });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc   Update payment gateway settings
+// @route  PUT /api/admin/payment-settings
+const updateAppSettings = async (req, res) => {
+  try {
+    const { nowpaymentsApiKey, nowpaymentsIpnSecret, nowpaymentsCallbackUrl, testMode } = req.body;
+    let settings = await AppSettings.findOne({ singleton: true });
+    const updates = {};
+    if (nowpaymentsApiKey !== undefined) updates.nowpaymentsApiKey = nowpaymentsApiKey.trim();
+    if (nowpaymentsIpnSecret !== undefined) updates.nowpaymentsIpnSecret = nowpaymentsIpnSecret.trim();
+    if (nowpaymentsCallbackUrl !== undefined) updates.nowpaymentsCallbackUrl = nowpaymentsCallbackUrl.trim();
+    if (testMode !== undefined) updates.testMode = Boolean(testMode);
+    if (settings) {
+      settings = await AppSettings.findOneAndUpdate({ singleton: true }, updates);
+    } else {
+      settings = await AppSettings.create({ singleton: true, ...updates });
+    }
+    res.json({ success: true, message: 'Payment settings updated' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getDashboardStats, getUsers, getUserDetail, updateUser,
   placeUserInTree, getAdminTree, updateMLMSettings,
   getAllCommissions, updateCommission, getWithdrawals, processWithdrawal,
   manualEnroll, createAdmin, createUser, getAllTransactions,
+  getAppSettings, updateAppSettings,
 };

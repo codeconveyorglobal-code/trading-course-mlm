@@ -76,7 +76,7 @@ const initiatePayment = async (req, res) => {
 const paymentCallback = async (req, res) => {
   try {
     const hmacHeader = req.headers['x-nowpayments-sig'];
-    if (!verifyIPN(req.body, hmacHeader)) {
+    if (!(await verifyIPN(req.body, hmacHeader))) {
       return res.status(400).json({ success: false, message: 'Invalid signature' });
     }
 

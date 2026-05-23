@@ -5,6 +5,7 @@ const {
   placeUserInTree, getAdminTree, updateMLMSettings,
   getAllCommissions, updateCommission, getWithdrawals, processWithdrawal,
   manualEnroll, createAdmin, createUser, getAllTransactions,
+  getAppSettings, updateAppSettings,
 } = require('../controllers/adminController');
 const { protect, adminOnly } = require('../middleware/auth');
 
@@ -36,5 +37,9 @@ router.put('/withdrawals/:id', processWithdrawal);
 
 // Transactions
 router.get('/transactions', getAllTransactions);
+
+// Payment Gateway Settings
+router.get('/payment-settings', getAppSettings);
+router.put('/payment-settings', updateAppSettings);
 
 module.exports = router;

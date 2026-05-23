@@ -218,3 +218,14 @@ model QuizAttempt {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
+
+model AppSettings {
+  id                     String   @id @default(uuid())
+  singleton              Boolean  @default(true) @unique
+  nowpaymentsApiKey      String   @default("")
+  nowpaymentsIpnSecret   String   @default("")
+  nowpaymentsCallbackUrl String   @default("")
+  testMode               Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
