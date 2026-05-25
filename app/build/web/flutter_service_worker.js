@@ -3,12 +3,14 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"assets/AssetManifest.bin": "2757ac48e59e0a578cc245bd16a7aba3",
+const RESOURCES = {".vercel/project.json": "caf6e9f9d35a10abef77c2f9ec0d6edd",
+".vercel/README.txt": "2b13c79d37d6ed82a3255b83b6815034",
+"assets/AssetManifest.bin": "2757ac48e59e0a578cc245bd16a7aba3",
 "assets/AssetManifest.bin.json": "869ab890f042936388e41cb97c70870b",
 "assets/FontManifest.json": "c75f7af11fb9919e042ad2ee704db319",
-"assets/fonts/MaterialIcons-Regular.otf": "97ac23a9b9d54c53aa968512d49d7f64",
+"assets/fonts/MaterialIcons-Regular.otf": "e7069dfd19b331be16bed984668fe080",
 "assets/NOTICES": "cdb29902d3e7c0d314a9c49ea868fcf2",
-"assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "33b7d9392238c04c131b6ce224e13711",
+"assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "b93248a553f9e8bc17f1065929d5934b",
 "assets/packages/font_awesome_flutter/lib/fonts/Font-Awesome-7-Brands-Regular-400.otf": "1fcba7a59e49001aa1b4409a25d425b0",
 "assets/packages/font_awesome_flutter/lib/fonts/Font-Awesome-7-Free-Regular-400.otf": "b2703f18eee8303425a5342dba6958db",
 "assets/packages/font_awesome_flutter/lib/fonts/Font-Awesome-7-Free-Solid-900.otf": "5b8d20acec3e57711717f61417c1be44",
@@ -27,10 +29,10 @@ const RESOURCES = {"assets/AssetManifest.bin": "2757ac48e59e0a578cc245bd16a7aba3
 "canvaskit/skwasm_heavy.js.symbols": "0755b4fb399918388d71b59ad390b055",
 "canvaskit/skwasm_heavy.wasm": "b0be7910760d205ea4e011458df6ee01",
 "flutter.js": "24bc71911b75b5f8135c949e27a2984e",
-"flutter_bootstrap.js": "3aabfc5bbeae5f506cead535b3b76799",
+"flutter_bootstrap.js": "5bf86614082cdb47d2282905f5ad3d8c",
 "index.html": "d0b8b85fb31d643a8ccaf3eda65cf0f1",
 "/": "d0b8b85fb31d643a8ccaf3eda65cf0f1",
-"main.dart.js": "ec5d1871972ed9a915af3e06021d63e9",
+"main.dart.js": "0034effe95db5013fb7fe04e6e551cf4",
 "version.json": "158a8527aca556047c6d973ee4223556"};
 // The application shell files that are downloaded before a service worker can
 // start.
