@@ -100,6 +100,10 @@ class ApiService {
   Future<Response> getSupportedCurrencies() =>
       _dio.get('/payments/currencies');
 
+  // Public (no auth required)
+  Future<Response> getPublicStats() => _dio.get('/public/stats');
+  Future<Response> getPublicCourses({int limit = 6}) => _dio.get('/public/courses', queryParameters: {'limit': limit});
+
   Future<Response> getWallet() => _dio.get('/payments/wallet');
 
   Future<Response> saveWalletAddress(String address) =>

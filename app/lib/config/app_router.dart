@@ -15,6 +15,7 @@ import '../screens/payment/payment_result_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/withdraw_screen.dart';
 import '../screens/profile/wallet_screen.dart';
+import '../screens/landing/landing_screen.dart';
 import '../screens/main_shell.dart';
 
 class AppRouter {
@@ -25,15 +26,17 @@ class AppRouter {
         final isLoggedIn = auth.isLoggedIn;
         final isAuthRoute = state.matchedLocation.startsWith('/auth');
         final isSplash = state.matchedLocation == '/splash';
+        final isLanding = state.matchedLocation == '/landing';
 
-        if (isSplash) return null;
-        if (!isLoggedIn && !isAuthRoute) return '/auth/login';
+        if (isSplash || isLanding) return null;
+        if (!isLoggedIn && !isAuthRoute) return '/landing';
         if (isLoggedIn && isAuthRoute) return '/home';
         return null;
       },
       refreshListenable: auth,
       routes: [
         GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+        GoRoute(path: '/landing', builder: (_, __) => const LandingScreen()),
         GoRoute(
           path: '/auth',
           redirect: (_, state) => state.uri.path == '/auth' ? '/auth/login' : null,

@@ -141,6 +141,7 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 // API Routes
+app.use('/api/public', require('./src/routes/public'));
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/mlm', mlmRoutes);
