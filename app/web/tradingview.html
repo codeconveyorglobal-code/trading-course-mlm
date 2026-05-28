@@ -5,51 +5,170 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      width: 100%;
-      height: 100%;
-      background: #0D1526;
-      overflow: hidden;
+    html, body { width: 100%; height: 100%; background: #0D1526; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    #toolbar {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+      display: flex; align-items: center; gap: 6px; padding: 8px 14px;
+      background: rgba(13,21,38,0.95); border-bottom: 1px solid rgba(0,210,255,0.12);
     }
-    #tradingview_chart {
-      width: 100%;
-      height: 100%;
+    .pair-btn {
+      padding: 4px 11px; border-radius: 6px;
+      border: 1px solid rgba(0,210,255,0.25);
+      background: transparent; color: #6B7FA3;
+      cursor: pointer; font-size: 11px; font-weight: 700;
+      transition: all 0.2s;
     }
-    #tradingview_chart iframe {
-      width: 100% !important;
-      height: 100% !important;
+    .pair-btn.active, .pair-btn:hover {
+      background: rgba(0,210,255,0.12); color: #00D2FF;
+      border-color: rgba(0,210,255,0.6);
+    }
+    .interval-btn {
+      padding: 3px 8px; border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent; color: #6B7FA3;
+      cursor: pointer; font-size: 10px; font-weight: 600;
+    }
+    .interval-btn.active, .interval-btn:hover {
+      background: rgba(255,255,255,0.08); color: #C3CFE2;
+      border-color: rgba(255,255,255,0.3);
+    }
+    #price-block { margin-left: auto; text-align: right; }
+    #price { font-size: 15px; font-weight: 800; color: #E0E6F0; }
+    #change { font-size: 11px; font-weight: 600; margin-left: 4px; }
+    #chart-container { position: absolute; top: 42px; left: 0; right: 0; bottom: 0; }
+    #loading {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      color: rgba(0,210,255,0.5); font-size: 13px; letter-spacing: 2px;
     }
   </style>
 </head>
 <body>
-  <div id="tradingview_chart"></div>
-  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-  <script type="text/javascript">
-    new TradingView.widget({
-      "container_id": "tradingview_chart",
-      "autosize": true,
-      "symbol": "BINANCE:BTCUSDT",
-      "interval": "60",
-      "timezone": "Etc/UTC",
-      "theme": "dark",
-      "style": "1",
-      "locale": "en",
-      "toolbar_bg": "#0D1526",
-      "enable_publishing": false,
-      "allow_symbol_change": true,
-      "withdateranges": true,
-      "hide_side_toolbar": false,
-      "details": true,
-      "hotlist": true,
-      "studies": ["MASimple@tv-basicstudies", "RSI@tv-basicstudies"],
-      "watchlist": [
-        "BINANCE:BTCUSDT",
-        "BINANCE:ETHUSDT",
-        "BINANCE:SOLUSDT",
-        "BINANCE:BNBUSDT",
-        "BINANCE:XRPUSDT"
-      ]
+  <div id="toolbar">
+    <button class="pair-btn active" data-pair="BTCUSDT">BTC/USDT</button>
+    <button class="pair-btn" data-pair="ETHUSDT">ETH/USDT</button>
+    <button class="pair-btn" data-pair="SOLUSDT">SOL/USDT</button>
+    <button class="pair-btn" data-pair="BNBUSDT">BNB/USDT</button>
+    <div style="width:1px;height:18px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
+    <button class="interval-btn" data-iv="1m">1m</button>
+    <button class="interval-btn active" data-iv="1h">1H</button>
+    <button class="interval-btn" data-iv="4h">4H</button>
+    <button class="interval-btn" data-iv="1d">1D</button>
+    <div id="price-block"><span id="price">Loading...</span><span id="change"></span></div>
+  </div>
+  <div id="chart-container">
+    <div id="loading">LOADING LIVE DATA...</div>
+  </div>
+
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+  <script>
+    let chart, candleSeries, ws;
+    let activePair = 'BTCUSDT';
+    let activeInterval = '1h';
+    let firstOpen = 0;
+
+    function initChart() {
+      const el = document.getElementById('chart-container');
+      chart = LightweightCharts.createChart(el, {
+        width: el.clientWidth,
+        height: el.clientHeight,
+        layout: {
+          background: { type: LightweightCharts.ColorType.Solid, color: '#0D1526' },
+          textColor: '#6B7FA3',
+        },
+        grid: {
+          vertLines: { color: 'rgba(0,210,255,0.04)' },
+          horzLines: { color: 'rgba(0,210,255,0.04)' },
+        },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: { borderColor: 'rgba(0,210,255,0.1)' },
+        timeScale: {
+          borderColor: 'rgba(0,210,255,0.1)',
+          timeVisible: true,
+          secondsVisible: false,
+        },
+      });
+
+      candleSeries = chart.addCandlestickSeries({
+        upColor: '#00C7A3',
+        downColor: '#FF4D6D',
+        borderUpColor: '#00C7A3',
+        borderDownColor: '#FF4D6D',
+        wickUpColor: '#00C7A3',
+        wickDownColor: '#FF4D6D',
+      });
+
+      window.addEventListener('resize', () => {
+        chart.applyOptions({ width: el.clientWidth, height: el.clientHeight });
+      });
+    }
+
+    async function loadPair(pair, interval) {
+      activePair = pair;
+      activeInterval = interval;
+      if (ws) { ws.close(); ws = null; }
+
+      try {
+        const r = await fetch(
+          `https://api.binance.com/api/v3/klines?symbol=${pair}&interval=${interval}&limit=300`
+        );
+        const data = await r.json();
+        const candles = data.map(k => ({
+          time: Math.floor(k[0] / 1000),
+          open: +k[1], high: +k[2], low: +k[3], close: +k[4],
+        }));
+        firstOpen = candles.length ? candles[0].open : 0;
+        candleSeries.setData(candles);
+        chart.timeScale().fitContent();
+        document.getElementById('loading').style.display = 'none';
+        if (candles.length) updatePrice(candles[candles.length - 1].close);
+
+        // Live updates
+        ws = new WebSocket(
+          `wss://stream.binance.com:9443/ws/${pair.toLowerCase()}@kline_${interval}`
+        );
+        ws.onmessage = e => {
+          const k = JSON.parse(e.data).k;
+          candleSeries.update({
+            time: Math.floor(k.t / 1000),
+            open: +k.o, high: +k.h, low: +k.l, close: +k.c,
+          });
+          updatePrice(+k.c);
+        };
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Failed to load data. Check connection.';
+      }
+    }
+
+    function updatePrice(price) {
+      const pct = firstOpen ? ((price - firstOpen) / firstOpen * 100).toFixed(2) : '0.00';
+      const priceStr = price > 100
+        ? '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '$' + price.toFixed(4);
+      document.getElementById('price').textContent = priceStr;
+      const chEl = document.getElementById('change');
+      chEl.textContent = (pct >= 0 ? '+' : '') + pct + '%';
+      chEl.style.color = pct >= 0 ? '#00C7A3' : '#FF4D6D';
+    }
+
+    // Toolbar events
+    document.querySelectorAll('.pair-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.pair-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadPair(btn.dataset.pair, activeInterval);
+      });
     });
+    document.querySelectorAll('.interval-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.interval-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadPair(activePair, btn.dataset.iv);
+      });
+    });
+
+    initChart();
+    loadPair('BTCUSDT', '1h');
   </script>
 </body>
 </html>
