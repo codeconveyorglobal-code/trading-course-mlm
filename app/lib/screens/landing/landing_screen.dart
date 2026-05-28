@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -252,6 +255,7 @@ class _LandingScreenState extends State<LandingScreen>
           SliverToBoxAdapter(child: _buildHero(context)),
           SliverToBoxAdapter(child: _buildWaveformDivider()),
           SliverToBoxAdapter(child: _buildStatsBar(context)),
+          SliverToBoxAdapter(child: _buildTradingViewSection(context)),
           SliverToBoxAdapter(child: _buildTradingSignals(context)),
           SliverToBoxAdapter(child: _buildWaveformDivider(flip: true)),
           SliverToBoxAdapter(child: _buildHowItWorks(context)),
@@ -796,6 +800,59 @@ class _LandingScreenState extends State<LandingScreen>
             ]),
           ),
         )),
+      ),
+    );
+  }
+
+  // ─── TradingView Live Chart ───────────────────────────────────────────────
+  Widget _buildTradingViewSection(BuildContext context) {
+    final isDesktop = context.isDesktop;
+    return _FadeSlideIn(
+      delay: const Duration(milliseconds: 80),
+      child: Padding(
+        padding: context.secPad,
+        child: _constrained(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            _SectionLabel('LIVE MARKET DATA'),
+            const SizedBox(width: 10),
+            _LiveDot(),
+            const SizedBox(width: 6),
+            const Text('Real-time prices', style: TextStyle(color: AppColors.textHint, fontSize: 11)),
+          ]),
+          const SizedBox(height: 10),
+          _GlitchText(
+            text: 'Live Charts & Prices',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isDesktop ? 36 : 24,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Interactive TradingView charts with live crypto data. Switch symbols, timeframes, and add indicators.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
+          const SizedBox(height: 28),
+          _NeonGlowBorder(
+            color: AppColors.primary,
+            ctrl: _sectionCtrl,
+            radius: 20,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: SizedBox(
+                height: isDesktop ? 540 : 400,
+                child: const _TradingViewChart(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Powered by TradingView',
+            style: TextStyle(color: AppColors.textHint, fontSize: 11),
+            textAlign: TextAlign.right,
+          ),
+        ])),
       ),
     );
   }
@@ -2348,6 +2405,37 @@ class _NeonGlowBorder extends StatelessWidget {
       child: child,
     ),
   );
+}
+
+// ─── TradingView Embedded Chart ───────────────────────────────────────────────
+class _TradingViewChart extends StatefulWidget {
+  const _TradingViewChart();
+  @override
+  State<_TradingViewChart> createState() => _TradingViewChartState();
+}
+
+class _TradingViewChartState extends State<_TradingViewChart> {
+  static const _viewType = 'tradingview-advanced-chart';
+  static bool _registered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_registered) {
+      _registered = true;
+      ui_web.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
+        final iframe = html.IFrameElement()
+          ..src = '/tradingview.html'
+          ..style.border = 'none'
+          ..style.width = '100%'
+          ..style.height = '100%';
+        return iframe;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const HtmlElementView(viewType: _viewType);
 }
 
 // ─── Tech Corner Border Painter ───────────────────────────────────────────────

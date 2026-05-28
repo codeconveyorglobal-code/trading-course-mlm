@@ -3,7 +3,7 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {".vercel/project.json": "caf6e9f9d35a10abef77c2f9ec0d6edd",
+const RESOURCES = {".vercel/project.json": "be104740f9d6a9bd0a7b189356130e03",
 ".vercel/README.txt": "2b13c79d37d6ed82a3255b83b6815034",
 "assets/AssetManifest.bin": "2757ac48e59e0a578cc245bd16a7aba3",
 "assets/AssetManifest.bin.json": "869ab890f042936388e41cb97c70870b",
@@ -29,10 +29,12 @@ const RESOURCES = {".vercel/project.json": "caf6e9f9d35a10abef77c2f9ec0d6edd",
 "canvaskit/skwasm_heavy.js.symbols": "0755b4fb399918388d71b59ad390b055",
 "canvaskit/skwasm_heavy.wasm": "b0be7910760d205ea4e011458df6ee01",
 "flutter.js": "24bc71911b75b5f8135c949e27a2984e",
-"flutter_bootstrap.js": "749ed7631af1691c7f58185611e94096",
+"flutter_bootstrap.js": "50dd1d7808226bf3b9cb3f156751ef5a",
 "index.html": "d0b8b85fb31d643a8ccaf3eda65cf0f1",
 "/": "d0b8b85fb31d643a8ccaf3eda65cf0f1",
-"main.dart.js": "da1a64916a93804a8aee8ccb964b7ef1",
+"main.dart.js": "075ca7faa6c7338610977630326c9127",
+"tradingview.html": "3f5845692a2d4adf83f4a4bdf0981585",
+"vercel.json": "72791cf1adf02c138f34f696db2de649",
 "version.json": "158a8527aca556047c6d973ee4223556"};
 // The application shell files that are downloaded before a service worker can
 // start.
