@@ -121,7 +121,7 @@ class _TreeNodeWidget extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         // Children
-        if (depth < 3 && (node.left != null || node.right != null))
+        if (node.left != null || node.right != null)
           IntrinsicHeight(
             child: Row(
               mainAxisSize: MainAxisSize.min,

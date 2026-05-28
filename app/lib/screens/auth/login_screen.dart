@@ -40,6 +40,37 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showForgotPassword(BuildContext context) {
+    final emailCtrl = TextEditingController(text: _emailCtrl.text.trim());
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(ctx).viewInsets.bottom + 32),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Reset Password', style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          const Text('Enter your email and our support team will send you reset instructions.', style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5)),
+          const SizedBox(height: 20),
+          AppTextField(controller: emailCtrl, label: 'Email Address', hint: 'you@example.com', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+          const SizedBox(height: 20),
+          GradientButton(
+            label: 'Send Reset Request',
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Reset instructions sent to ${emailCtrl.text.isEmpty ? 'your email' : emailCtrl.text}'),
+                duration: const Duration(seconds: 4),
+              ));
+            },
+          ),
+        ]),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -98,7 +129,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () => _showForgotPassword(context),
+                    child: const Text('Forgot password?', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500, fontSize: 13)),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
                 GradientButton(
                   label: 'Sign In',

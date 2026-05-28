@@ -23,7 +23,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   bool _initiating = false;
   String? _error;
   Timer? _pollTimer;
+  Timer? _countdownTimer;
   String _paymentStatus = 'waiting';
+  int _secondsLeft = 60 * 60; // 60 minutes
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -62,6 +65,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _startPolling(String paymentId) {
+    _secondsLeft = 60 * 60;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) { t.cancel(); return; }
+      setState(() {
+        if (_secondsLeft > 0) {
+          _secondsLeft--;
+        } else {
+          t.cancel();
+        }
+      });
+    });
     _pollTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {
       try {
         final api = context.read<ApiService>();
@@ -151,13 +165,38 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final address = p['payAddress'] ?? '';
     final amount = p['payAmount']?.toString() ?? '0';
     final currency = p['payCurrency'] ?? _selectedCurrency;
+    final mins = (_secondsLeft ~/ 60).toString().padLeft(2, '0');
+    final secs = (_secondsLeft % 60).toString().padLeft(2, '0');
+    final timerExpired = _secondsLeft <= 0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
           _StatusBanner(_paymentStatus),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
+          // Countdown timer
+          if (!timerExpired && !['finished', 'failed'].contains(_paymentStatus))
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              decoration: BoxDecoration(
+                color: _secondsLeft < 300 ? AppColors.danger.withOpacity(0.1) : AppColors.cardLight,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _secondsLeft < 300 ? AppColors.danger.withOpacity(0.4) : AppColors.border),
+              ),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(Icons.access_time_rounded, size: 16, color: _secondsLeft < 300 ? AppColors.danger : AppColors.textSecondary),
+                const SizedBox(width: 6),
+                Text('Expires in  $mins:$secs', style: TextStyle(color: _secondsLeft < 300 ? AppColors.danger : AppColors.textSecondary, fontWeight: FontWeight.w600)),
+              ]),
+            )
+          else if (timerExpired && !['finished', 'failed'].contains(_paymentStatus))
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              decoration: BoxDecoration(color: AppColors.danger.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.danger.withOpacity(0.3))),
+              child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.access_time_filled_rounded, size: 16, color: AppColors.danger), SizedBox(width: 6), Text('Payment expired', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600))]),
+            ),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),

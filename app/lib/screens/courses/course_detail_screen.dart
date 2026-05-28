@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../config/theme.dart';
 import '../../models/course_model.dart';
 import '../../providers/course_provider.dart';
@@ -30,6 +31,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Future<void> _load() async {
     final course = await context.read<CourseProvider>().getCourse(widget.courseId);
     if (mounted) setState(() { _course = course; _loading = false; });
+  }
+
+  void _openMaterial(BuildContext context, CourseMaterial mat) async {
+    if (mat.url == null || mat.url!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No content URL available')));
+      return;
+    }
+    final rawUrl = mat.url!.startsWith('http') ? mat.url! : '${AppConfig.uploadUrl}/${mat.url}';
+    final uri = Uri.parse(rawUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open content')));
+    }
   }
 
   @override
@@ -105,7 +120,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   ),
                   const SizedBox(height: 20),
                   if (_tabIndex == 0) _OverviewTab(course: course),
-                  if (_tabIndex == 1) _LessonsTab(course: course, isPurchased: isPurchased),
+                  if (_tabIndex == 1) _LessonsTab(course: course, isPurchased: isPurchased, onOpen: _openMaterial),
                   if (_tabIndex == 2) _QuizzesTab(course: course, isPurchased: isPurchased),
                   const SizedBox(height: 100),
                 ],
@@ -118,7 +133,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           ? Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(color: AppColors.card, border: Border(top: BorderSide(color: AppColors.border))),
-              child: GradientButton(label: 'Continue Learning', onPressed: () {}),
+              child: GradientButton(
+                label: 'Continue Learning',
+                onPressed: () {
+                  final firstLesson = course.materials.isNotEmpty ? course.materials.first : null;
+                  if (firstLesson != null && firstLesson.url != null) {
+                    _openMaterial(context, firstLesson);
+                  } else {
+                    setState(() => _tabIndex = 1);
+                  }
+                },
+              ),
             )
           : Container(
               padding: const EdgeInsets.all(20),
@@ -203,28 +228,59 @@ class _OverviewTab extends StatelessWidget {
 class _LessonsTab extends StatelessWidget {
   final CourseModel course;
   final bool isPurchased;
-  const _LessonsTab({required this.course, required this.isPurchased});
+  final void Function(BuildContext, CourseMaterial) onOpen;
+  const _LessonsTab({required this.course, required this.isPurchased, required this.onOpen});
 
   @override
   Widget build(BuildContext context) => Column(
-    children: course.materials.map((mat) => Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: AppColors.cardLight, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-      child: Row(children: [
-        Container(width: 40, height: 40, decoration: BoxDecoration(color: _matColor(mat.type).withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: Icon(_matIcon(mat.type), size: 20, color: _matColor(mat.type))),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(mat.title, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
-          Text(mat.type.toUpperCase(), style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-        ])),
-        if (!isPurchased && !mat.isPreview)
-          const Icon(Icons.lock_outline, size: 18, color: AppColors.textHint)
-        else
-          const Icon(Icons.play_circle_outline, size: 20, color: AppColors.primary),
-      ]),
-    )).toList(),
+    children: course.materials.asMap().entries.map((entry) {
+      final index = entry.key;
+      final mat = entry.value;
+      final canAccess = isPurchased || mat.isPreview;
+      return GestureDetector(
+        onTap: canAccess ? () => onOpen(context, mat) : null,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.cardLight,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: canAccess ? AppColors.border : AppColors.border.withOpacity(0.5)),
+          ),
+          child: Row(children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(color: AppColors.cardLight, borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.border)),
+              child: Center(child: Text('${index + 1}', style: TextStyle(color: canAccess ? AppColors.primary : AppColors.textHint, fontWeight: FontWeight.w700, fontSize: 13))),
+            ),
+            const SizedBox(width: 12),
+            Container(width: 40, height: 40, decoration: BoxDecoration(color: _matColor(mat.type).withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: Icon(_matIcon(mat.type), size: 20, color: _matColor(mat.type))),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(mat.title, style: TextStyle(color: canAccess ? AppColors.textPrimary : AppColors.textSecondary, fontWeight: FontWeight.w500)),
+              Row(children: [
+                Text(mat.type.toUpperCase(), style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                if (mat.duration != null) ...[const Text(' • ', style: TextStyle(color: AppColors.textHint, fontSize: 11)), Text(mat.duration!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11))],
+                if (mat.isPreview) ...[const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: AppColors.success.withOpacity(0.15), borderRadius: BorderRadius.circular(4)), child: const Text('FREE', style: TextStyle(color: AppColors.success, fontSize: 9, fontWeight: FontWeight.w700)))],
+              ]),
+            ])),
+            if (!canAccess)
+              const Icon(Icons.lock_outline, size: 18, color: AppColors.textHint)
+            else
+              Icon(_actionIcon(mat.type), size: 20, color: AppColors.primary),
+          ]),
+        ),
+      );
+    }).toList(),
   );
+
+  IconData _actionIcon(String type) {
+    switch (type) {
+      case 'video': return Icons.play_circle_outline;
+      case 'pdf': return Icons.open_in_new_rounded;
+      default: return Icons.arrow_forward_ios_rounded;
+    }
+  }
 
   Color _matColor(String type) {
     switch (type) {
